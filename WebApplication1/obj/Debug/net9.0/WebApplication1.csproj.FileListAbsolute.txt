@@ -232,3 +232,4 @@ C:\Users\hassan.b\Desktop\backend\WebApplication1\obj\Debug\net9.0\refint\WebApp
 C:\Users\hassan.b\Desktop\backend\WebApplication1\obj\Debug\net9.0\WebApplication1.pdb
 C:\Users\hassan.b\Desktop\backend\WebApplication1\obj\Debug\net9.0\WebApplication1.genruntimeconfig.cache
 C:\Users\hassan.b\Desktop\backend\WebApplication1\obj\Debug\net9.0\ref\WebApplication1.dll
+C:\Users\hassan.b\Desktop\backend\WebApplication1\obj\Debug\net9.0\WebApplication1.sourcelink.json

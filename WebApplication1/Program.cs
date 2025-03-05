@@ -35,7 +35,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnTokenValidated = context =>
             {
-                var userClaims = context.Principal?.Claims;
+                var userClaims = context.Principal?.Claims; // contains all the claims associated with claims principle
                 var roleClaim = userClaims?.FirstOrDefault(c => c.Type == "roleName")?.Value;
 
                 if (!string.IsNullOrEmpty(roleClaim))

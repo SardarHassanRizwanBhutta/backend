@@ -11,7 +11,7 @@ using WebApplication1.Services;
 
 namespace WebApplication1.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "SuperAdmin")]
     [Route("users")]
     [ApiController] // This class now responds to web api requests
     public class UserController : ControllerBase
@@ -33,7 +33,6 @@ namespace WebApplication1.Controllers
        }
 
         // GET: api/User/5
-        [Authorize(Roles = "SuperAdmin")]
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUser(long id)
         {
