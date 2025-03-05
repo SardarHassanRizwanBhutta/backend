@@ -49,19 +49,26 @@ namespace WebApplication1.Controllers
         // PUT: api/User/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         // Put request requires to send entire updated entity not partial updates 
-        // [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(User user)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutUser(long id, User user)
         {
-            var result = _userService.GetUserById(user.Id);
-
-            if(result == null)
+             if (id != user.Id)
             {
                 return BadRequest();
             }
 
-            user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password); 
+            var result = await _userService.GetUserById(id);
 
-            await _userService.UpdateUser(user);
+            if(result == null)
+            {
+                return NotFound();
+            }
+
+            result.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+
+            result.Email = user.Email; 
+
+            await _userService.UpdateUser(result);
 
             return NoContent();
         }

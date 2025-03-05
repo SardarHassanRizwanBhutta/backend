@@ -47,10 +47,11 @@ namespace WebApplication1.Controllers
                 return BadRequest(new {message="Email already taken", data = (object) null});
             }
             user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
-            result = await _userService.AddUser(user);
+            // result = await _userService.AddUser(user);
+            int result1 = await _userService.AddUser(user);
             // return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
             // return Ok(user);
-            return Ok(new {message="Success", data = result});
+            return Ok(new {message="Success", data = result1});
         }
 
         [HttpPost("sign-in")]

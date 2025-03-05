@@ -24,22 +24,32 @@ namespace WebApplication1.Services
            return result;
         }
         public async Task<IEnumerable<User>> GetUsers() {
-            return await _context.Users.AsNoTracking().Include(u => u.Role).ToListAsync();
+            // without stored procedures below
+            // return await _context.Users.AsNoTracking().Include(u => u.Role).ToListAsync();
+            // stored procedure below
+            return await _context.Users.FromSqlRaw("CALL GetUsers()").ToListAsync();
         }
 
         public async Task<User?> GetUserById(long id) {
-            return await _context.Users.FindAsync(id);
+            // return await _context.Users.FindAsync(id);
+            return await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u=> u.Id == id);
         }
-
-        public async Task<User?> AddUser(User user) {
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-            return user;
+        //  public async Task<User?> AddUser(User user)
+        public async Task<int> AddUser(User user) {
+            // through stored procedure
+            return await _context.Database.ExecuteSqlRawAsync("CALL AddUsers({0}, {1}, {2})", user.Email, user.Password, user.RoleId);
+            // without stored procedures
+            // _context.Users.Add(user);
+            // await _context.SaveChangesAsync();
+            // return user;
         }
-
-        public async Task DeleteUser(User user) {
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
+        // public async Task DeleteUser(User user)
+        public async Task<int> DeleteUser(User user) {
+            // through stored procedure
+            return await _context.Database.ExecuteSqlInterpolatedAsync($"CALL DeleteUser({user.Id})");
+            // without stored procedures
+            // _context.Users.Remove(user);
+            // await _context.SaveChangesAsync();
         }
 
         public async Task UpdateUser(User user) {
