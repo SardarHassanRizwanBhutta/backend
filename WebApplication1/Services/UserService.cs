@@ -20,8 +20,20 @@ namespace WebApplication1.Services
     // we can use List<User> when fetching users
 
         public async Task<User?> GetUserByEmail(string email) {
-           var result = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u=> u.Email == email);
-           return result;
+            // without using stored procedures
+        //    var result = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u=> u.Email == email);
+        //    return result;
+        var result = await _context.Database.SqlQueryRaw<UserRoleDto>("CALL GetUserByEmail(@p0)", email).AsNoTracking().ToListAsync();
+            var userDto = result.FirstOrDefault(); // Extract a single user
+            if (userDto == null) return null;
+
+            return new User {
+                Id = userDto.Id,
+                Email = userDto.Email,
+                Password = userDto.Password,
+                RoleId = userDto.RoleId,
+                Role = new Role {Id = userDto.RoleId, Name = userDto.RoleName}
+                };
         }
         public async Task<IEnumerable<User>> GetUsers() {
             // without stored procedures below
@@ -31,8 +43,21 @@ namespace WebApplication1.Services
         }
 
         public async Task<User?> GetUserById(long id) {
+            // without stored procedures
             // return await _context.Users.FindAsync(id);
-            return await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u=> u.Id == id);
+            // return await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u=> u.Id == id);
+            // through stored procedures
+            var result = await _context.Database.SqlQueryRaw<UserRoleDto>("CALL GetUserById(@p0)", id).AsNoTracking().ToListAsync();
+            var userDto = result.FirstOrDefault(); // Extract a single user
+            if (userDto == null) return null;
+
+            return new User {
+                Id = userDto.Id,
+                Email = userDto.Email,
+                Password = userDto.Password,
+                RoleId = userDto.RoleId,
+                Role = new Role {Id = userDto.RoleId, Name = userDto.RoleName}
+                };
         }
         //  public async Task<User?> AddUser(User user)
         public async Task<int> AddUser(User user) {
@@ -52,10 +77,16 @@ namespace WebApplication1.Services
             // await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateUser(User user) {
-            _context.Entry(user).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+        public async Task<int> UpdateUser(User user) {
+            return await _context.Database.ExecuteSqlRawAsync("CALL UpdateUsers({0}, {1}, {2}, {3})", user.Id, user.Email, user.Password, user.RoleId);
+            // without stored procedures
+            // _context.Entry(user).State = EntityState.Modified;
+            // await _context.SaveChangesAsync();
         }
 
     }
 }
+
+// FromSqlRaw method is used to execute SQL commands against the database and returns the instance of DbSet
+// ExecuteSqlRawAsync is used to execute the SQL commands and returns the number of rows affected
+// ExecuteSqlInterpolatedAsync executes the SQL command and returns the number of affected rows

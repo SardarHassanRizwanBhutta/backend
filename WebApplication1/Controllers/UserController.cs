@@ -68,6 +68,8 @@ namespace WebApplication1.Controllers
 
             result.Email = user.Email; 
 
+            result.RoleId = user.RoleId;
+
             await _userService.UpdateUser(result);
 
             return NoContent();
