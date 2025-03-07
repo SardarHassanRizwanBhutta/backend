@@ -19,17 +19,20 @@ namespace WebApplication1.Controllers
         
         private readonly UserService _userService;
 
-        public UserController(DatabaseContext context, UserService userService)
+        private readonly ILogger<UserController> _logger;
+
+        public UserController(DatabaseContext context, UserService userService, ILogger<UserController> logger)
         {
             _userService = userService;
+            _logger = logger;
         }
 
         // GET: api/User
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
-           var users = await _userService.GetUsers();
-           return Ok(users);
+            var result = await _userService.GetUsers();
+            return Ok(new ResponseObject<object>("Success", result));
        }
 
         // GET: api/User/5
@@ -37,12 +40,11 @@ namespace WebApplication1.Controllers
         public async Task<ActionResult<User>> GetUser(long id)
         {
             var user = await _userService.GetUserById(id);
-        // Explicitly checking if user is not null, because it does not convert the obj into truthy or falsy 
+            // Explicitly checking if user is not null, because it does not convert the obj into truthy or falsy
             if (user == null)
             {
                 return NotFound();
             }
-
             return Ok(user);
         }
 
@@ -52,12 +54,11 @@ namespace WebApplication1.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(long id, User user)
         {
-             if (id != user.Id)
+            if (id != user.Id)
             {
                 return BadRequest();
             }
-
-            var result = await _userService.GetUserById(id);
+                var result = await _userService.GetUserById(id);
 
             if(result == null)
             {
@@ -72,22 +73,21 @@ namespace WebApplication1.Controllers
 
             await _userService.UpdateUser(result);
 
-            return NoContent();
+            return NoContent();            
         }
 
         // DELETE: api/User/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(long id)
         {
-            var user = await _userService.GetUserById(id); //EF uses in-memory snapshots to track changes to our entities
             // if we have entity cache in our snapshot we can save one extra round trip to database for Find or FindAsync methods
-            if (user == null)
-            {
-                return NotFound();
+                var user = await _userService.GetUserById(id); //EF uses in-memory snapshots to track changes to our entities
+                if (user == null)
+                {
+                    return NotFound();
+                }
+                await _userService.DeleteUser(user);
+                return NoContent();
             }
-            await _userService.DeleteUser(user);
-            return NoContent();
-        }
-
     }
 }

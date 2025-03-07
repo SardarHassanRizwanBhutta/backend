@@ -73,6 +73,7 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+app.UseMiddleware<ExceptionHandlingMiddleware>(); // add custom middleware it to the application request processing pipeline
 
 app.UseHttpsRedirection();
 

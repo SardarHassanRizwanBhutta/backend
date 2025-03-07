@@ -24,11 +24,14 @@ namespace WebApplication1.Controllers
 
         private readonly UserService _userService;
 
-        public AuthController(DatabaseContext context, JwtService jwtService, UserService userService)
+        private ILogger<AuthController> _logger;
+
+        public AuthController(DatabaseContext context, JwtService jwtService, UserService userService, ILogger<AuthController> logger)
         {
             _context = context;
             _jwtService = jwtService;
             _userService = userService;
+            _logger = logger;
         }
 
         // POST: api/User
@@ -40,31 +43,31 @@ namespace WebApplication1.Controllers
         // Automatically serializes the object to json
         [HttpPost("sign-up")]
         // <ActionResult>
-        public async Task<IActionResult> SignUp(User user)
+        public async Task<IActionResult> SignUp(User userReq)
         {
-            var result = await _userService.GetUserByEmail(user.Email);
-            if(result != null) {
-                return BadRequest(new {message="Email already taken", data = (object) null});
+                var user = await _userService.GetUserByEmail(userReq.Email);
+                if(user != null) {
+                    return BadRequest(new ResponseObject<object>("Email already taken", null));
+                }
+                userReq.Password = BCrypt.Net.BCrypt.HashPassword(userReq.Password);
+                // result = await _userService.AddUser(user);
+                int result = await _userService.AddUser(userReq);
+                // return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
+                // return Ok(user);
+                return Ok(new ResponseObject<object>("Success", result));
             }
-            user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
-            // result = await _userService.AddUser(user);
-            int result1 = await _userService.AddUser(user);
-            // return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
-            // return Ok(user);
-            return Ok(new {message="Success", data = result1});
-        }
 
         [HttpPost("sign-in")]
         public async Task<ActionResult<User>> SignIn(AuthRequest user)
         {
-            var result = await _userService.GetUserByEmail(user.Email);
-            if(result == null || !BCrypt.Net.BCrypt.Verify(user.Password, result.Password))
-            {
-                return BadRequest(new {message="Invalid Username or password", data = (object) null});
-            }
-            Console.WriteLine($"User: {result.Email}, Role: {result.Role?.Name}");
-            var token = _jwtService.GenerateToken(result);
-            return Ok(new {message="Success", data= token});
+                var result = await _userService.GetUserByEmail(user.Email);
+                if(result == null || !BCrypt.Net.BCrypt.Verify(user.Password, result.Password))
+                {
+                    return BadRequest(new ResponseObject<object>("Invalid Username or password", null));
+                }
+                Console.WriteLine($"User: {result.Email}, Role: {result.Role?.Name}");
+                var token = _jwtService.GenerateToken(result);
+                return Ok(new ResponseObject<string>("Success", token));
         }
     }
 }
