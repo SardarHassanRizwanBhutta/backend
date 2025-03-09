@@ -18,20 +18,14 @@ namespace WebApplication1.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly DatabaseContext _context;
-
         private readonly JwtService _jwtService;
 
         private readonly UserService _userService;
 
-        private ILogger<AuthController> _logger;
-
-        public AuthController(DatabaseContext context, JwtService jwtService, UserService userService, ILogger<AuthController> logger)
+        public AuthController(JwtService jwtService, UserService userService)
         {
-            _context = context;
             _jwtService = jwtService;
             _userService = userService;
-            _logger = logger;
         }
 
         // POST: api/User

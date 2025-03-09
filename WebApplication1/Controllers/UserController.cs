@@ -19,12 +19,9 @@ namespace WebApplication1.Controllers
         
         private readonly UserService _userService;
 
-        private readonly ILogger<UserController> _logger;
-
-        public UserController(DatabaseContext context, UserService userService, ILogger<UserController> logger)
+        public UserController(UserService userService)
         {
             _userService = userService;
-            _logger = logger;
         }
 
         // GET: api/User
@@ -39,13 +36,13 @@ namespace WebApplication1.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUser(long id)
         {
-            var user = await _userService.GetUserById(id);
+            var result = await _userService.GetUserById(id);
             // Explicitly checking if user is not null, because it does not convert the obj into truthy or falsy
-            if (user == null)
+            if (result == null)
             {
-                return NotFound();
+                return NotFound(new ResponseObject<object>("User Not Found", result));
             }
-            return Ok(user);
+            return Ok(new ResponseObject<object>("Success", result));
         }
 
         // PUT: api/User/5
@@ -56,13 +53,13 @@ namespace WebApplication1.Controllers
         {
             if (id != user.Id)
             {
-                return BadRequest();
+                return BadRequest(new ResponseObject<object>("Parameter Id and Body Id does not match", null));
             }
                 var result = await _userService.GetUserById(id);
 
             if(result == null)
             {
-                return NotFound();
+                return NotFound(new ResponseObject<object>("User Not Found", null));
             }
 
             result.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);

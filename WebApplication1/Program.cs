@@ -1,5 +1,6 @@
 // Below  lines are also added as part of the registering services with the DI container
 
+using System.Net;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -30,7 +31,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(secretKey)
         };
 
-        // Extract roleName claim and set it as User Role
+        // Extract roleName claim and set it as User Role, configs
         options.Events = new JwtBearerEvents
         {
             OnTokenValidated = context =>
@@ -45,7 +46,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 }
 
                 return Task.CompletedTask;
-            }
+            },
+            // overriding default challenge logic(which executes to handle 401 Unauthorized)
+            // is to hook a handler to the JwtBearerEvents.OnChallenge callback,
+            // this will override the default logic in JwtBearerHandler.HandleChallengeAsync function
+            OnChallenge = async context =>
+        {
+            // Call this to skip the default logic and avoid using the default response
+            context.HandleResponse();
+
+            // Customizing the response
+            context.Response.StatusCode = 401;
+            await context.Response.WriteAsJsonAsync(new ResponseObject<object>("Unauthorized", null));
+        }
         };
     });
 
@@ -74,7 +87,16 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 app.UseMiddleware<ExceptionHandlingMiddleware>(); // add custom middleware it to the application request processing pipeline
-
+// Middleware in config method to customize the forbidden response 
+app.Use(async (context, next) =>
+{
+    await next();
+    
+    if (context.Response.StatusCode == (int)HttpStatusCode.Forbidden) // 403
+    {
+        await context.Response.WriteAsJsonAsync(new ResponseObject<object>("Forbidden", null));
+    }
+});
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
